@@ -1,6 +1,5 @@
 export default async function handler(req, res) {
-    // Vercel.json handles the OPTIONS preflight now, 
-    // so we just check for the method we want.
+    // Request method check
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -21,11 +20,8 @@ export default async function handler(req, res) {
 
         // 2. Fetch Firecrawl
         const apiKey = process.env.FIRECRAWL_API_KEY;
-        
-        // Safety check for API Key
         if (!apiKey) {
-            console.error("API Key is missing in Vercel Environment Variables");
-            return res.status(500).json({ error: 'Server Configuration Error. Please check Vercel Logs.' });
+            return res.status(500).json({ error: 'Missing API Key' });
         }
 
         const firecrawlRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
@@ -43,21 +39,10 @@ export default async function handler(req, res) {
         });
 
         const firecrawlData = await firecrawlRes.json();
-        
-        let markdown = "";
-        if (!firecrawlData.data || !firecrawlData.data.markdown) {
-            markdown = "# Error\nCould not retrieve content from Firecrawl.";
-        } else {
-            markdown = firecrawlData.data.markdown;
-        }
-
+        const markdown = firecrawlData.data?.markdown || "# Error\nCould not retrieve content.";
         const mdSize = Buffer.byteLength(markdown, 'utf8');
 
-        // 3. Generate Previews & Metrics
-        const costBefore = (htmlSize / 4 / 1000) * 0.0025 * 1000;
-        const costAfter = (mdSize / 4 / 1000) * 0.0025 * 1000;
-        const reduction = (((htmlSize - mdSize) / htmlSize) * 100).toFixed(1);
-
+        // 3. Generate Previews
         const claudePreview = JSON.stringify({
             source: "Spring AI",
             meta: { url, date: new Date().toISOString() },
@@ -73,14 +58,15 @@ export default async function handler(req, res) {
         
         const geminiPreview = `<!DOCTYPE html><html><head><script type="application/ld+json">${schema}</script></head><body><div class="markdown-body">${markdown.substring(0, 500).replace(/</g, "&lt;")}...</div></body></html>`;
 
+        // 4. Return Results
         return res.status(200).json({
             success: true,
             metrics: {
                 html_size: (htmlSize / 1024).toFixed(2),
                 md_size: (mdSize / 1024).toFixed(2),
-                reduction: reduction,
-                cost_before: costBefore.toFixed(2),
-                cost_after: costAfter.toFixed(2)
+                reduction: (((htmlSize - mdSize) / htmlSize) * 100).toFixed(1),
+                cost_before: ((htmlSize / 4 / 1000) * 0.0025 * 1000).toFixed(2),
+                cost_after: ((mdSize / 4 / 1000) * 0.0025 * 1000).toFixed(2)
             },
             previews: {
                 gpt: markdown,
