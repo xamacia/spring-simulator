@@ -1,19 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spring AI - Live Impact Simulator</title>
+    <title>Spring AI - Simulateur d'Impact en Direct</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
         .gradient-text { background: linear-gradient(135deg, #34d399, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .loader { border-top-color: #34d399; -webkit-animation: spinner 1.5s linear infinite; animation: spinner 1.5s linear infinite; }
+        .loader { border-top-color: #34d399; animation: spinner 1.5s linear infinite; }
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        pre { background: #1e293b; border-radius: 8px; padding: 16px; overflow-x: auto; }
+        code { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6; }
+        .keyword { color: #c792ea; }
+        .string { color: #c3e88d; }
+        .number { color: #f78c6c; }
+        .property { color: #82aaff; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -21,73 +25,74 @@
     <!-- HERO SECTION -->
     <div class="container mx-auto px-4 py-12 text-center max-w-4xl">
         <div class="inline-block px-3 py-1 mb-4 text-xs font-semibold tracking-wider text-emerald-400 uppercase bg-emerald-900/30 rounded-full border border-emerald-800">
-            Live Benchmark Tool
+            Outil de Benchmark en Direct
         </div>
         <h1 class="text-5xl font-extrabold mb-6 tracking-tight">
-            Is your site <span class="gradient-text">AI-Ready?</span>
+            Votre site est-il <span class="gradient-text">prêt pour l'IA ?</span>
         </h1>
         <p class="text-lg text-slate-400 mb-8 max-w-2xl mx-auto">
-            AI crawlers (ChatGPT, Claude, Perplexity) struggle with heavy HTML. 
-            Enter a URL to see how <strong>Spring AI</strong> transforms your content for 90% faster indexing.
+            Les crawlers IA (ChatGPT, Claude, Perplexity) peinent avec le HTML lourd. 
+            Entrez une URL pour voir comment <strong>Spring AI</strong> transforme votre contenu pour une indexation 90% plus rapide.
         </p>
 
         <!-- INPUT FORM -->
-        <div class="glass-panel p-2 rounded-full flex items-center max-w-xl mx-auto shadow-2xl shadow-emerald-900/20 relative">
-            <input type="url" id="urlInput" placeholder="https://yourwebsite.com/blog-post/" 
+        <div class="glass-panel p-2 rounded-full flex items-center max-w-xl mx-auto shadow-2xl shadow-emerald-900/20">
+            <input type="url" id="urlInput" placeholder="https://votresite.com/article" 
                    class="w-full bg-transparent border-none text-white px-6 py-3 focus:outline-none placeholder-slate-500"
                    value="https://lengo.ai">
             <button onclick="runSimulation()" 
                     class="bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold py-3 px-8 rounded-full transition-all transform hover:scale-105 flex items-center">
-                <span id="btnText">Simulate</span>
+                <span id="btnText">Analyser</span>
                 <div id="btnLoader" class="loader ease-linear rounded-full border-2 border-t-2 border-emerald-900 h-5 w-5 ml-2 hidden"></div>
             </button>
         </div>
+
+        <p class="text-xs text-slate-500 mt-4">
+            💡 Cette démo utilise l'API Firecrawl pour extraire le contenu optimisé
+        </p>
     </div>
 
-    <!-- RESULTS SECTION (Hidden by default) -->
+    <!-- RESULTS SECTION -->
     <div id="resultsArea" class="container mx-auto px-4 pb-20 hidden">
         
         <!-- KPI CARDS -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <!-- Card 1 -->
             <div class="glass-panel p-6 rounded-2xl border-t-4 border-emerald-500">
-                <div class="text-slate-400 text-sm uppercase font-bold mb-2">Data Payload</div>
+                <div class="text-slate-400 text-sm uppercase font-bold mb-2">Charge de Données</div>
                 <div class="flex items-baseline gap-2">
-                    <span class="text-4xl font-bold text-white" id="valPayload">12 KB</span>
-                    <span class="text-sm text-emerald-400">▼ <span id="valReduction">99%</span></span>
+                    <span class="text-4xl font-bold text-white" id="valPayload">-- KB</span>
+                    <span class="text-sm text-emerald-400">▼ <span id="valReduction">--%</span></span>
                 </div>
-                <div class="text-xs text-slate-500 mt-2">Was <span id="valBefore">1.5 MB</span>. AI reads this 10x faster.</div>
+                <div class="text-xs text-slate-500 mt-2">Était <span id="valBefore">-- KB</span>. L'IA lit ceci 10x plus vite.</div>
             </div>
-            <!-- Card 2 -->
+            
             <div class="glass-panel p-6 rounded-2xl border-t-4 border-blue-500">
-                <div class="text-slate-400 text-sm uppercase font-bold mb-2">Cost per 1k Crawls</div>
+                <div class="text-slate-400 text-sm uppercase font-bold mb-2">Coût pour 1k Crawls</div>
                 <div class="flex items-baseline gap-2">
-                    <span class="text-4xl font-bold text-white" id="valCostAfter">$7.25</span>
+                    <span class="text-4xl font-bold text-white" id="valCostAfter">$--</span>
                 </div>
-                <div class="text-xs text-slate-500 mt-2">vs <span id="valCostBefore">$1000</span> without optimization.</div>
+                <div class="text-xs text-slate-500 mt-2">vs <span id="valCostBefore">$--</span> sans optimisation.</div>
             </div>
-            <!-- Card 3 -->
+            
             <div class="glass-panel p-6 rounded-2xl border-t-4 border-purple-500">
-                <div class="text-slate-400 text-sm uppercase font-bold mb-2">Info Density</div>
+                <div class="text-slate-400 text-sm uppercase font-bold mb-2">Densité d'Info</div>
                 <div class="flex items-baseline gap-2">
                     <span class="text-4xl font-bold text-white">99.0%</span>
                 </div>
-                <div class="text-xs text-slate-500 mt-2">Signal-to-noise ratio maximized for RAG.</div>
+                <div class="text-xs text-slate-500 mt-2">Ratio signal/bruit maximisé pour RAG.</div>
             </div>
         </div>
 
         <!-- TRANSFORMATION PREVIEW -->
         <div class="max-w-5xl mx-auto">
-            <h3 class="text-2xl font-bold mb-6 text-center">Agentic Transformation Preview</h3>
+            <h3 class="text-2xl font-bold mb-6 text-center">Aperçu de la Transformation Agentique</h3>
             
-            <!-- TABS -->
             <div class="flex justify-center gap-2 mb-4">
                 <button onclick="switchTab('gpt')" id="tab-gpt" class="tab-btn bg-slate-700 text-white px-6 py-2 rounded-lg font-medium border border-slate-600">ChatGPT (Markdown)</button>
                 <button onclick="switchTab('claude')" id="tab-claude" class="tab-btn text-slate-400 hover:text-white px-6 py-2 rounded-lg font-medium">Claude (JSON)</button>
                 <button onclick="switchTab('gemini')" id="tab-gemini" class="tab-btn text-slate-400 hover:text-white px-6 py-2 rounded-lg font-medium">Gemini (Schema)</button>
             </div>
 
-            <!-- CODE WINDOW -->
             <div class="glass-panel rounded-xl overflow-hidden shadow-2xl">
                 <div class="bg-slate-900 px-4 py-2 flex items-center gap-2 border-b border-slate-700">
                     <div class="w-3 h-3 rounded-full bg-red-500"></div>
@@ -96,52 +101,43 @@
                     <span class="ml-2 text-xs text-slate-500 font-mono" id="filenameDisplay">response.md</span>
                 </div>
                 <div class="relative">
-                    <!-- Content Areas -->
-                    <pre id="code-gpt" class="language-markdown m-0 p-4 h-96 overflow-auto text-sm"><code>Waiting for simulation...</code></pre>
-                    <pre id="code-claude" class="language-json m-0 p-4 h-96 overflow-auto text-sm hidden"><code></code></pre>
-                    <pre id="code-gemini" class="language-html m-0 p-4 h-96 overflow-auto text-sm hidden"><code></code></pre>
+                    <pre id="code-gpt" class="m-0 p-4 h-96 overflow-auto text-sm"><code>En attente de simulation...</code></pre>
+                    <pre id="code-claude" class="m-0 p-4 h-96 overflow-auto text-sm hidden"><code></code></pre>
+                    <pre id="code-gemini" class="m-0 p-4 h-96 overflow-auto text-sm hidden"><code></code></pre>
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>
-        // === CONFIGURATION ===
-        // 🔴 PASTE YOUR API KEY HERE (Must start with 'fc-') 🔴
-        const FIRECRAWL_API_KEY = "fc-d6a56198ba4e4539bdeb2cade7c11e41"; 
-        // =====================
+        // 🔴 CONFIGURATION : Remplacez par votre clé API Firecrawl
+        const FIRECRAWL_API_KEY = "fc-d6a56198ba4e4539bdeb2cade7c11e41";
 
         let previewData = {};
 
         async function runSimulation() {
             const url = document.getElementById('urlInput').value;
+            
+            if (!url || !url.startsWith('http')) {
+                alert('Veuillez entrer une URL valide commençant par http:// ou https://');
+                return;
+            }
+
             const btn = document.querySelector('button');
             const loader = document.getElementById('btnLoader');
             const btnText = document.getElementById('btnText');
             const results = document.getElementById('resultsArea');
 
-            // UI Loading State
+            // État de chargement
             btn.disabled = true;
             btn.classList.add('opacity-75');
             loader.classList.remove('hidden');
-            btnText.innerText = "Analyzing...";
+            btnText.innerText = "Analyse...";
             results.classList.add('hidden');
 
             try {
-                // 1. Fetch Raw HTML Size (Using a Proxy to avoid CORS)
-                // We assume 1 char = 1 byte for rough estimation
-                const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(url);
-                const htmlRes = await fetch(proxyUrl);
-                
-                if (!htmlRes.ok) throw new Error("Could not fetch target URL. The site might block proxies.");
-                
-                const htmlText = await htmlRes.text();
-                const htmlSize = new TextEncoder().encode(htmlText).length;
-
-                // 2. Fetch Firecrawl (Directly via Proxy)
-                // We wrap the Firecrawl API call in the proxy too
-                const firecrawlRes = await fetch("https://corsproxy.io/?https://api.firecrawl.dev/v1/scrape", {
+                // Appel à l'API Firecrawl
+                const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -149,89 +145,128 @@
                     },
                     body: JSON.stringify({
                         url: url,
-                        formats: ["markdown"],
-                        onlyMainContent: true,
-                        includeTags: ["article", "main", "h1", "p", "ul", "ol"]
+                        formats: ["markdown", "html"],
+                        onlyMainContent: true
                     })
                 });
 
-                const firecrawlData = await firecrawlRes.json();
+                const data = await response.json();
                 
-                let markdown = "";
-                if (firecrawlData.success === false) {
-                     markdown = "# Error\n" + (firecrawlData.error || "Firecrawl API Failed.");
-                } else {
-                     markdown = firecrawlData.data?.markdown || "# No Content Found";
+                if (!data.success) {
+                    throw new Error(data.error || "L'API Firecrawl a échoué");
                 }
+
+                const markdown = data.data?.markdown || "# Aucun contenu trouvé";
+                const html = data.data?.html || "";
                 
+                // Calcul des tailles
+                const htmlSize = new TextEncoder().encode(html).length;
                 const mdSize = new TextEncoder().encode(markdown).length;
 
-                // 3. Calculate Metrics
+                // Estimation des coûts (GPT-4 pricing: ~$0.0025 per 1K tokens, 1 token ≈ 4 chars)
                 const costBefore = (htmlSize / 4 / 1000) * 0.0025 * 1000;
                 const costAfter = (mdSize / 4 / 1000) * 0.0025 * 1000;
-                const reduction = (((htmlSize - mdSize) / htmlSize) * 100).toFixed(1);
+                const reduction = htmlSize > 0 ? (((htmlSize - mdSize) / htmlSize) * 100).toFixed(1) : 0;
 
-                // 4. Generate Previews
+                // Génération des aperçus
                 const claudePreview = JSON.stringify({
                     source: "Spring AI",
-                    meta: { url, date: new Date().toISOString() },
-                    content: markdown.substring(0, 500) + "..."
+                    meta: { 
+                        url: url, 
+                        crawled_at: new Date().toISOString(),
+                        size_kb: (mdSize / 1024).toFixed(2)
+                    },
+                    content: markdown.substring(0, 800) + (markdown.length > 800 ? "..." : "")
                 }, null, 2);
 
-                const schema = JSON.stringify({
+                const schema = {
                     "@context": "https://schema.org",
                     "@type": "Article",
                     "url": url,
-                    "articleBody": markdown.substring(0, 200) + "..."
-                }, null, 2);
+                    "articleBody": markdown.substring(0, 500) + "..."
+                };
                 
-                const geminiPreview = `<!DOCTYPE html><html><head><script type="application/ld+json">${schema}</script></head><body><div class="markdown-body">${markdown.substring(0, 500).replace(/</g, "&lt;")}...</div></body></html>`;
+                const geminiPreview = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <script type="application/ld+json">
+${JSON.stringify(schema, null, 4)}
+    </script>
+</head>
+<body>
+    <article class="spring-ai-optimized">
+${markdown.substring(0, 600).split('\n').map(line => '        ' + line).join('\n')}
+        ${markdown.length > 600 ? '...' : ''}
+    </article>
+</body>
+</html>`;
 
-                // 5. Update UI
+                // Mise à jour de l'UI
                 document.getElementById('valPayload').innerText = (mdSize / 1024).toFixed(2) + " KB";
-                document.getElementById('valReduction').innerText = "▼ " + reduction + "%";
+                document.getElementById('valReduction').innerText = reduction + "%";
                 document.getElementById('valBefore').innerText = (htmlSize / 1024).toFixed(2) + " KB";
                 document.getElementById('valCostAfter').innerText = "$" + costAfter.toFixed(2);
                 document.getElementById('valCostBefore').innerText = "$" + costBefore.toFixed(2);
 
-                previewData = { gpt: markdown, claude: claudePreview, gemini: geminiPreview };
+                previewData = { 
+                    gpt: markdown, 
+                    claude: claudePreview, 
+                    gemini: geminiPreview 
+                };
                 
-                document.getElementById('code-gpt').innerHTML = Prism.highlight(previewData.gpt, Prism.languages.markdown, 'markdown');
-                document.getElementById('code-claude').innerHTML = Prism.highlight(previewData.claude, Prism.languages.json, 'json');
-                document.getElementById('code-gemini').innerHTML = Prism.highlight(previewData.gemini, Prism.languages.html, 'html');
+                // Affichage avec coloration syntaxique basique
+                document.getElementById('code-gpt').innerHTML = `<code>${escapeHtml(previewData.gpt)}</code>`;
+                document.getElementById('code-claude').innerHTML = `<code>${highlightJSON(previewData.claude)}</code>`;
+                document.getElementById('code-gemini').innerHTML = `<code>${highlightHTML(previewData.gemini)}</code>`;
 
-                // Reveal Results
                 results.classList.remove('hidden');
-                
-                // Scroll to results
                 results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-            } catch (e) {
-                alert("Simulation failed: " + e.message);
-                console.error(e);
+            } catch (error) {
+                alert("❌ Échec de la simulation : " + error.message + "\n\nVérifiez :\n1. Votre clé API Firecrawl\n2. Que l'URL est accessible\n3. Votre connexion internet");
+                console.error(error);
             } finally {
                 btn.disabled = false;
                 btn.classList.remove('opacity-75');
                 loader.classList.add('hidden');
-                btnText.innerText = "Simulate";
+                btnText.innerText = "Analyser";
             }
         }
 
         function switchTab(bot) {
-            // Hide all
             ['gpt', 'claude', 'gemini'].forEach(b => {
                 document.getElementById('code-' + b).classList.add('hidden');
-                document.getElementById('tab-' + b).classList.remove('bg-slate-700', 'text-white');
+                document.getElementById('tab-' + b).classList.remove('bg-slate-700', 'text-white', 'border-slate-600');
                 document.getElementById('tab-' + b).classList.add('text-slate-400');
             });
 
-            // Show selected
             document.getElementById('code-' + bot).classList.remove('hidden');
-            document.getElementById('tab-' + bot).classList.add('bg-slate-700', 'text-white');
+            const tab = document.getElementById('tab-' + bot);
+            tab.classList.add('bg-slate-700', 'text-white');
+            tab.classList.remove('text-slate-400');
             
-            // Update filename hint
             const map = { 'gpt': 'response.md', 'claude': 'response.json', 'gemini': 'response.html' };
             document.getElementById('filenameDisplay').innerText = map[bot];
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[m]);
+        }
+
+        function highlightJSON(json) {
+            return escapeHtml(json)
+                .replace(/(".*?")/g, '<span class="string">$1</span>')
+                .replace(/(\d+)/g, '<span class="number">$1</span>')
+                .replace(/("[\w_]+")\s*:/g, '<span class="property">$1</span>:');
+        }
+
+        function highlightHTML(html) {
+            return escapeHtml(html)
+                .replace(/(&lt;\/?[\w]+)/g, '<span class="keyword">$1</span>')
+                .replace(/(".*?")/g, '<span class="string">$1</span>');
         }
     </script>
 </body>
