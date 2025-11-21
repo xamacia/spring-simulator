@@ -109,7 +109,7 @@
     <script>
         // === CONFIGURATION ===
         // 🔴 PASTE YOUR API KEY HERE (Must start with 'fc-') 🔴
-        const FIRECRAWL_API_KEY = "fc-YOUR_API_KEY_HERE"; 
+        const FIRECRAWL_API_KEY = "fc-d6a56198ba4e4539bdeb2cade7c11e41"; 
         // =====================
 
         let previewData = {};
@@ -130,6 +130,7 @@
 
             try {
                 // 1. Fetch Raw HTML Size (Using a Proxy to avoid CORS)
+                // We assume 1 char = 1 byte for rough estimation
                 const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(url);
                 const htmlRes = await fetch(proxyUrl);
                 
@@ -139,6 +140,7 @@
                 const htmlSize = new TextEncoder().encode(htmlText).length;
 
                 // 2. Fetch Firecrawl (Directly via Proxy)
+                // We wrap the Firecrawl API call in the proxy too
                 const firecrawlRes = await fetch("https://corsproxy.io/?https://api.firecrawl.dev/v1/scrape", {
                     method: "POST",
                     headers: {
