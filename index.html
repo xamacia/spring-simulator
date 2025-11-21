@@ -107,6 +107,11 @@
     </div>
 
     <script>
+        // === CONFIGURATION ===
+        // 🔴 PASTE YOUR API KEY HERE (Must start with 'fc-') 🔴
+        const FIRECRAWL_API_KEY = "fc-YOUR_API_KEY_HERE"; 
+        // =====================
+
         let previewData = {};
 
         async function runSimulation() {
@@ -124,30 +129,71 @@
             results.classList.add('hidden');
 
             try {
-                const response = await fetch('analyze.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: url })
+                // 1. Fetch Raw HTML Size (Using a Proxy to avoid CORS)
+                const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(url);
+                const htmlRes = await fetch(proxyUrl);
+                
+                if (!htmlRes.ok) throw new Error("Could not fetch target URL. The site might block proxies.");
+                
+                const htmlText = await htmlRes.text();
+                const htmlSize = new TextEncoder().encode(htmlText).length;
+
+                // 2. Fetch Firecrawl (Directly via Proxy)
+                const firecrawlRes = await fetch("https://corsproxy.io/?https://api.firecrawl.dev/v1/scrape", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${FIRECRAWL_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        formats: ["markdown"],
+                        onlyMainContent: true,
+                        includeTags: ["article", "main", "h1", "p", "ul", "ol"]
+                    })
                 });
 
-                const data = await response.json();
-
-                if (data.error) {
-                    alert("Error: " + data.error);
-                    return;
-                }
-
-                // Update UI with Real Data
-                document.getElementById('valPayload').innerText = data.metrics.md_size + " KB";
-                document.getElementById('valReduction').innerText = "▼ " + data.metrics.reduction + "%";
-                document.getElementById('valBefore').innerText = data.metrics.html_size + " KB";
-                document.getElementById('valCostAfter').innerText = "$" + data.metrics.cost_after;
-                document.getElementById('valCostBefore').innerText = "$" + data.metrics.cost_before;
-
-                // Store Code Snippets
-                previewData = data.previews;
+                const firecrawlData = await firecrawlRes.json();
                 
-                // Update Code Blocks
+                let markdown = "";
+                if (firecrawlData.success === false) {
+                     markdown = "# Error\n" + (firecrawlData.error || "Firecrawl API Failed.");
+                } else {
+                     markdown = firecrawlData.data?.markdown || "# No Content Found";
+                }
+                
+                const mdSize = new TextEncoder().encode(markdown).length;
+
+                // 3. Calculate Metrics
+                const costBefore = (htmlSize / 4 / 1000) * 0.0025 * 1000;
+                const costAfter = (mdSize / 4 / 1000) * 0.0025 * 1000;
+                const reduction = (((htmlSize - mdSize) / htmlSize) * 100).toFixed(1);
+
+                // 4. Generate Previews
+                const claudePreview = JSON.stringify({
+                    source: "Spring AI",
+                    meta: { url, date: new Date().toISOString() },
+                    content: markdown.substring(0, 500) + "..."
+                }, null, 2);
+
+                const schema = JSON.stringify({
+                    "@context": "https://schema.org",
+                    "@type": "Article",
+                    "url": url,
+                    "articleBody": markdown.substring(0, 200) + "..."
+                }, null, 2);
+                
+                const geminiPreview = `<!DOCTYPE html><html><head><script type="application/ld+json">${schema}</script></head><body><div class="markdown-body">${markdown.substring(0, 500).replace(/</g, "&lt;")}...</div></body></html>`;
+
+                // 5. Update UI
+                document.getElementById('valPayload').innerText = (mdSize / 1024).toFixed(2) + " KB";
+                document.getElementById('valReduction').innerText = "▼ " + reduction + "%";
+                document.getElementById('valBefore').innerText = (htmlSize / 1024).toFixed(2) + " KB";
+                document.getElementById('valCostAfter').innerText = "$" + costAfter.toFixed(2);
+                document.getElementById('valCostBefore').innerText = "$" + costBefore.toFixed(2);
+
+                previewData = { gpt: markdown, claude: claudePreview, gemini: geminiPreview };
+                
                 document.getElementById('code-gpt').innerHTML = Prism.highlight(previewData.gpt, Prism.languages.markdown, 'markdown');
                 document.getElementById('code-claude').innerHTML = Prism.highlight(previewData.claude, Prism.languages.json, 'json');
                 document.getElementById('code-gemini').innerHTML = Prism.highlight(previewData.gemini, Prism.languages.html, 'html');
@@ -159,7 +205,7 @@
                 results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
             } catch (e) {
-                alert("Simulation failed. Check console.");
+                alert("Simulation failed: " + e.message);
                 console.error(e);
             } finally {
                 btn.disabled = false;
