@@ -4,20 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spring AI - Simulateur d'Impact en Direct</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
-        .gradient-text { background: linear-gradient(135deg, #34d399, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .loader { border-top-color: #34d399; animation: spinner 1.5s linear infinite; }
-        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        pre { background: #1e293b; border-radius: 8px; padding: 16px; overflow-x: auto; }
-        code { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; min-height: 100vh; }
+        .gradient-text { 
+            background: linear-gradient(135deg, #34d399, #3b82f6); 
+            -webkit-background-clip: text; 
+            background-clip: text;
+            -webkit-text-fill-color: transparent; 
+        }
+        .glass-panel { 
+            background: rgba(30, 41, 59, 0.7); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(255,255,255,0.1); 
+        }
+        .loader { 
+            border: 2px solid #1e293b;
+            border-top-color: #34d399; 
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spinner 1.5s linear infinite; 
+        }
+        @keyframes spinner { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        pre { 
+            background: #1e293b; 
+            border-radius: 8px; 
+            padding: 16px; 
+            overflow-x: auto; 
+            margin: 0;
+        }
+        code { 
+            font-family: 'Courier New', monospace; 
+            font-size: 13px; 
+            line-height: 1.6; 
+            color: #e2e8f0;
+        }
         .keyword { color: #c792ea; }
         .string { color: #c3e88d; }
         .number { color: #f78c6c; }
         .property { color: #82aaff; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -47,9 +79,10 @@
             </button>
         </div>
 
-        <p class="text-xs text-slate-500 mt-4">
-            💡 Cette démo utilise l'API Firecrawl pour extraire le contenu optimisé
-        </p>
+        <div class="text-xs text-slate-500 mt-6 max-w-md mx-auto">
+            <p class="mb-2">💡 Cette démo utilise l'API Firecrawl pour extraire le contenu optimisé</p>
+            <p class="text-slate-600">Testez avec des sites comme : lengo.ai, techcrunch.com, medium.com</p>
+        </div>
     </div>
 
     <!-- RESULTS SECTION -->
@@ -136,6 +169,8 @@
             results.classList.add('hidden');
 
             try {
+                console.log('🚀 Début de l\'analyse pour:', url);
+                
                 // Appel à l'API Firecrawl
                 const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
                     method: "POST",
@@ -150,7 +185,14 @@
                     })
                 });
 
+                console.log('📡 Réponse reçue, status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status}`);
+                }
+
                 const data = await response.json();
+                console.log('✅ Données parsées:', data);
                 
                 if (!data.success) {
                     throw new Error(data.error || "L'API Firecrawl a échoué");
