@@ -12,15 +12,10 @@
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         .cursor-blink { animation: blink 1s step-end infinite; }
         .scan-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
+            position: absolute; top: 0; left: 0; width: 100%; height: 2px;
             background: rgba(16, 185, 129, 0.5);
             box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
-            animation: scan 3s linear infinite;
-            pointer-events: none;
+            animation: scan 3s linear infinite; pointer-events: none;
         }
         @keyframes scan { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
     </style>
@@ -31,233 +26,149 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // --- SVG ICONS ---
+        // Embedded Icons
         const Icons = {
             Search: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
             Eye: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>,
             Play: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="5 3 19 12 5 21 5 3" /></svg>,
             BarChart: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>,
             Cpu: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="16" height="16" x="4" y="4" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 2v2"/><path d="M15 2v2"/><path d="M9 20v2"/><path d="M15 20v2"/><path d="M2 9h2"/><path d="M2 15h2"/><path d="M20 9h2"/><path d="M20 15h2"/></svg>,
-            Bot: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1V7a7 7 0 0 1 7-7h1zm1 12a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-4 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>
-        };
-
-        const Icon = ({ name, className }) => {
-            const nameMap = { 'search': Icons.Search, 'eye': Icons.Eye, 'play': Icons.Play, 'bar-chart': Icons.BarChart, 'cpu': Icons.Cpu, 'bot': Icons.Bot };
-            const Component = nameMap[name] || Icons.Cpu;
-            return <Component className={className} />;
+            Bot: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1V7a7 7 0 0 1 7-7h1zm1 12a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-4 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>,
+            Code: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
         };
 
         const SpringImpactSimulator = () => {
             const [url, setUrl] = useState('https://techcrunch.com/2024/01/01/example-article/');
-            const [apiKey, setApiKey] = useState('fc-d6a56198ba4e4539bdeb2cade7c11e41');
+            // API Key removed from frontend state for security!
             const [loading, setLoading] = useState(false);
             const [result, setResult] = useState(null);
             const [error, setError] = useState('');
+            const [showCode, setShowCode] = useState(false);
             const [useDemoMode, setUseDemoMode] = useState(false);
 
-            const SERVER_URL = "/analyze"; 
-
             const simulateAnalysis = async () => {
-                setLoading(true);
-                setError('');
-                setResult(null);
+                setLoading(true); setError(''); setResult(null); setShowCode(false);
                 try {
                     if (useDemoMode) {
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                        const mockRawSize = 1024 * 1024 * 1.2; // 1.2 MB
-                        const mockMarkDownSize = 1024 * 18; // 18 KB
-                        calculateResults(mockRawSize, mockMarkDownSize, 8.5, 0.0025);
-                    } else {
-                        const response = await fetch(SERVER_URL, {
-                            method: 'POST', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ url: url, apiKey: apiKey })
+                        await new Promise(r => setTimeout(r, 1500));
+                        const mockRaw = 1024 * 1200; const mockMd = 1024 * 12;
+                        
+                        // FIX: We use backticks for multi-line strings and escape the closing script tag
+                        // to prevent the browser's HTML parser from terminating the script block early.
+                        const rawSnippet = `<!DOCTYPE html><html lang='en' class='no-js'><head><meta charset='utf-8'>` +
+                            `<script>...window.NREUM||(NREUM={});NREUM.info={'beacon':'bam.nr-data.net'}...<\/script>` +
+                            `<style>.ad-wrapper{display:none}...</style><div><div class='nav-bar'><ul><li>Home</li><li>About</li></ul></div>...`;
+
+                        setResult({
+                            before: { size: mockRaw, tokens: mockRaw/4, cost: (mockRaw/4000)*0.0025, snippet: rawSnippet },
+                            after: { size: mockMd, tokens: mockMd/4, cost: (mockMd/4000)*0.0025, snippet: "# Example Article Title\n\nBy **John Doe**\n\nThis is the clean content that AI loves to read. It has no ads, no tracking scripts, and no unnecessary divs.\n\n* Point 1\n* Point 2\n" },
+                            savings: { pct: 99, reduction: 99, multiplier: 100 },
+                            grade: 'A+'
                         });
-                        const contentType = response.headers.get("content-type");
-                        if (contentType && contentType.indexOf("application/json") === -1) throw new Error("Server Error: Non-JSON response.");
-                        const data = await response.json();
-                        if (!response.ok) throw new Error(data.error || "Fetch failed");
-                        setResult(data);
+                    } else {
+                        const res = await fetch("/analyze", {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: url }) // No API key sent
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.error || "Error");
+                        
+                        // Calculate Grade
+                        let grade = 'F';
+                        if (data.savings.multiplier > 50) grade = 'A+';
+                        else if (data.savings.multiplier > 20) grade = 'A';
+                        else if (data.savings.multiplier > 10) grade = 'B';
+                        else if (data.savings.multiplier > 5) grade = 'C';
+
+                        setResult({ ...data, grade });
                     }
-                } catch (err) {
-                    setError(err.message);
-                } finally {
-                    setLoading(false);
-                }
+                } catch (err) { setError(err.message); } finally { setLoading(false); }
             };
 
-            const calculateResults = (rawSize, markdownSize, rawDensity, costPer1k) => {
-                const tokensBefore = rawSize / 4;
-                const tokensAfter = markdownSize / 4;
-                const costBefore = (tokensBefore / 1000) * costPer1k;
-                const costAfter = (tokensAfter / 1000) * costPer1k;
-                setResult({
-                    before: { size: rawSize, tokens: tokensBefore, density: rawDensity, cost: costBefore },
-                    after: { size: markdownSize, tokens: tokensAfter, density: 99.5, cost: costAfter },
-                    savings: { pct: ((costBefore - costAfter) / costBefore) * 100, reduction: ((rawSize - markdownSize) / rawSize) * 100, multiplier: rawSize / markdownSize }
-                });
-            };
-
-            const formatBytes = (bytes) => {
-                if (bytes === 0) return '0 B';
-                const k = 1024;
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + ['B', 'KB', 'MB', 'GB'][i];
-            };
+            const formatBytes = (b) => { if(b===0)return'0 B'; const k=1024; const i=Math.floor(Math.log(b)/Math.log(k)); return parseFloat((b/Math.pow(k,i)).toFixed(2))+' '+['B','KB','MB','GB'][i]; };
 
             return (
-                <div className="min-h-screen bg-slate-950 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]">
-                    
-                    {/* Navigation */}
+                <div className="min-h-screen bg-slate-950 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pb-20">
                     <nav className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-50">
                         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="relative">
-                                    <div className="absolute inset-0 bg-emerald-500 blur-sm opacity-20"></div>
-                                    <div className="bg-slate-900 p-2 rounded border border-emerald-500/30 relative">
-                                        <Icon name="cpu" className="text-emerald-500 w-5 h-5" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <span className="font-bold text-slate-100 tracking-tight block leading-none">Spring AI</span>
-                                    <span className="text-[10px] text-slate-500 uppercase tracking-widest">Middleware</span>
-                                </div>
+                                <div className="bg-slate-900 p-2 rounded border border-emerald-500/30"><Icons.Cpu className="text-emerald-500 w-5 h-5" /></div>
+                                <span className="font-bold text-slate-100">Spring AI <span className="text-slate-500 font-normal text-xs">Middleware</span></span>
                             </div>
-                            <div className="flex gap-4 text-xs font-mono text-slate-500">
-                                <div className="flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                    SYSTEM_ONLINE
-                                </div>
-                            </div>
+                            <div className="text-xs font-mono text-slate-500 flex gap-2"><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>SYSTEM_ONLINE</div>
                         </div>
                     </nav>
 
-                    {/* Hero Section */}
-                    <header className="max-w-4xl mx-auto pt-24 pb-16 px-6 text-center relative">
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 blur-[120px] rounded-full -z-10"></div>
-                        
+                    <header className="max-w-4xl mx-auto pt-20 pb-12 px-6 text-center">
                         <div className="inline-flex items-center gap-2 bg-slate-900/50 border border-slate-700/50 text-emerald-400 px-4 py-1.5 rounded-full text-xs font-medium mb-8 backdrop-blur-sm">
-                            <Icon name="bot" className="w-3 h-3" />
-                            <span>Optimized for LLM Consumption</span>
+                            <Icons.Eye className="w-3 h-3" /><span>Optimized for LLM Vision</span>
                         </div>
-                        
-                        <h1 className="text-4xl md:text-7xl font-bold text-white mb-8 tracking-tight leading-tight">
-                            Be visible to <br/>
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400">The AI Web</span>
-                        </h1>
-                        
-                        <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                            <strong className="text-slate-200">Perplexity, Claude, and ChatGPT</strong> skip noisy HTML. 
-                            Spring AI strips the bloat and serves high-density Markdown, ensuring your content is indexed, understood, and cited.
-                        </p>
+                        <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">How AI see your website ?</h1>
+                        <p className="text-slate-400 max-w-xl mx-auto">Paste your URL to test if ChatGPT, Claude & Perplexity can read your content efficiently.</p>
                     </header>
 
-                    {/* Scanner UI */}
-                    <main className="max-w-5xl mx-auto px-6 pb-32">
-                        <div className="bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl overflow-hidden backdrop-blur-sm relative group">
+                    <main className="max-w-5xl mx-auto px-6">
+                        <div className="bg-slate-900/80 rounded-xl border border-slate-700 shadow-2xl overflow-hidden backdrop-blur-sm relative">
                             {loading && <div className="scan-line z-10"></div>}
                             
-                            <div className="p-1 border-b border-slate-800 bg-slate-950 flex items-center gap-2 px-4">
-                                <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
-                                <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
-                                <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
-                                <div className="ml-4 text-xs text-slate-600 font-mono flex-grow text-center">user@spring-ai:~/simulator</div>
-                            </div>
-
                             <div className="p-8 md:p-12">
-                                <div className="flex flex-col md:flex-row gap-0 md:gap-0 items-stretch rounded-lg border border-slate-700 overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/50 transition-all shadow-lg">
+                                <div className="flex gap-0 rounded-lg border border-slate-700 overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/50 transition-all shadow-lg">
                                     <div className="flex-grow bg-slate-950 relative flex items-center">
-                                        <span className="pl-4 text-slate-500 font-mono select-none">{'>'}</span>
-                                        <input type="text" value={url} onChange={(e) => setUrl(e.target.value)}
-                                            className="w-full bg-transparent text-slate-200 px-4 py-5 outline-none font-mono text-sm placeholder-slate-600" 
-                                            placeholder="https://your-website.com" />
+                                        <span className="pl-4 text-slate-500 font-mono">{'>'}</span>
+                                        <input type="text" value={url} onChange={(e) => setUrl(e.target.value)} className="w-full bg-transparent text-slate-200 px-4 py-5 outline-none font-mono text-sm placeholder-slate-600" placeholder="https://..." />
                                     </div>
-                                    <button onClick={simulateAnalysis} disabled={loading}
-                                        className={`px-8 py-4 font-bold text-sm tracking-wide transition-all flex items-center gap-2
-                                            ${loading ? 'bg-slate-800 text-slate-500 cursor-wait' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}>
-                                        {loading ? 'PARSING DOM...' : <>RUN DIAGNOSTIC <Icon name="play" className="w-3 h-3 fill-current" /></>}
+                                    <button onClick={simulateAnalysis} disabled={loading} className={`px-8 py-4 font-bold text-sm transition-all flex items-center gap-2 ${loading ? 'bg-slate-800 text-slate-500' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}>
+                                        {loading ? 'SCANNING...' : <>ANALYZE <Icons.Play className="w-3 h-3" /></>}
                                     </button>
                                 </div>
-
-                                <div className="mt-4 flex items-center justify-center">
-                                    <label className="flex items-center gap-2 cursor-pointer group/check">
-                                        <div className={`w-4 h-4 border rounded transition-colors flex items-center justify-center
-                                            ${useDemoMode ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600 bg-slate-800 group-hover/check:border-slate-500'}`}>
-                                            {useDemoMode && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                                        </div>
-                                        <input type="checkbox" checked={useDemoMode} onChange={(e) => setUseDemoMode(e.target.checked)} className="hidden" />
-                                        <span className="text-xs text-slate-500 group-hover/check:text-slate-400 transition-colors">Force "Demo Mode" (Bypass CORS)</span>
-                                    </label>
-                                </div>
-                                
-                                {error && (
-                                    <div className="mt-8 p-4 border-l-4 border-red-500 bg-red-500/5 text-red-400 text-sm font-mono">
-                                        <p className="font-bold mb-1">CRITICAL_ERROR</p>
-                                        <p>{error}</p>
-                                    </div>
-                                )}
+                                <div className="mt-4 flex justify-center"><label className="flex items-center gap-2 cursor-pointer text-xs text-slate-500 hover:text-slate-300"><input type="checkbox" checked={useDemoMode} onChange={(e) => setUseDemoMode(e.target.checked)} className="rounded bg-slate-800 border-slate-600 text-emerald-500" /> Force Demo Mode</label></div>
+                                {error && <div className="mt-6 p-4 border-l-4 border-red-500 bg-red-500/10 text-red-400 text-sm font-mono"><p className="font-bold">ERROR</p>{error}</div>}
                             </div>
 
-                            {/* Results Section */}
-                            {result ? (
+                            {result && (
                                 <div className="border-t border-slate-800 bg-slate-950/50 p-8 md:p-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                     <div className="flex items-center justify-between mb-8">
-                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                            <Icon name="bar-chart" className="text-emerald-500" /> 
-                                            Diagnostic Results
-                                        </h3>
-                                        <span className="text-xs font-mono text-emerald-500 border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 rounded">PASSED</span>
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2"><Icons.BarChart className="text-emerald-500" /> Results</h3>
+                                        <div className={`text-xl font-black px-4 py-1 rounded border ${result.grade.startsWith('A') ? 'border-emerald-500 text-emerald-400 bg-emerald-500/10' : 'border-yellow-500 text-yellow-400 bg-yellow-500/10'}`}>Grade: {result.grade}</div>
                                     </div>
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                                        <div className="bg-slate-900 p-6 rounded border border-slate-800">
-                                            <div className="text-slate-500 text-xs font-mono uppercase mb-2">LLM Parseability</div>
-                                            <div className="text-4xl font-bold text-emerald-400">High</div>
-                                            <div className="text-xs text-slate-600 mt-2">Clean structure detected</div>
+                                        <div className="bg-slate-900 p-6 rounded border border-slate-800 text-center">
+                                            <div className="text-slate-500 text-xs font-mono uppercase mb-2">Efficiency Boost</div>
+                                            <div className="text-4xl font-bold text-emerald-400">{result.savings.multiplier.toFixed(1)}x</div>
                                         </div>
-                                        <div className="bg-slate-900 p-6 rounded border border-slate-800">
-                                            <div className="text-slate-500 text-xs font-mono uppercase mb-2">Payload Bloat Removed</div>
+                                        <div className="bg-slate-900 p-6 rounded border border-slate-800 text-center">
+                                            <div className="text-slate-500 text-xs font-mono uppercase mb-2">Bloat Removed</div>
                                             <div className="text-4xl font-bold text-white">-{result.savings.reduction.toFixed(1)}%</div>
-                                            <div className="text-xs text-slate-600 mt-2">{formatBytes(result.before.size)} ➔ {formatBytes(result.after.size)}</div>
                                         </div>
-                                        <div className="bg-slate-900 p-6 rounded border border-slate-800">
-                                            <div className="text-slate-500 text-xs font-mono uppercase mb-2">Semantic Density</div>
-                                            <div className="text-4xl font-bold text-cyan-400">{result.savings.multiplier.toFixed(1)}x</div>
-                                            <div className="text-xs text-slate-600 mt-2">More signal per token</div>
+                                        <div className="bg-slate-900 p-6 rounded border border-slate-800 text-center">
+                                            <div className="text-slate-500 text-xs font-mono uppercase mb-2">Est. Cost Savings</div>
+                                            <div className="text-4xl font-bold text-cyan-400">{result.savings.pct.toFixed(0)}%</div>
                                         </div>
                                     </div>
 
-                                    <div className="overflow-hidden rounded border border-slate-800">
-                                        <table className="w-full text-sm text-left font-mono">
-                                            <thead className="bg-slate-900 text-slate-500 text-xs uppercase">
-                                                <tr>
-                                                    <th className="px-6 py-4">Metric</th>
-                                                    <th className="px-6 py-4 text-red-400">Standard HTML (Invisible)</th>
-                                                    <th className="px-6 py-4 text-emerald-400">Spring AI (Optimized)</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-800 bg-slate-900/30">
-                                                <tr>
-                                                    <td className="px-6 py-4 text-slate-400">Crawl Budget Impact</td>
-                                                    <td className="px-6 py-4 text-red-400 font-bold">Heavy ({formatBytes(result.before.size)})</td>
-                                                    <td className="px-6 py-4 text-emerald-400 font-bold">Light ({formatBytes(result.after.size)})</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="px-6 py-4 text-slate-400">Context Window Usage</td>
-                                                    <td className="px-6 py-4 text-slate-500">{Math.round(result.before.tokens).toLocaleString()} tokens</td>
-                                                    <td className="px-6 py-4 text-emerald-400 font-bold">{Math.round(result.after.tokens).toLocaleString()} tokens</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="px-6 py-4 text-slate-400">Indexing Probability</td>
-                                                    <td className="px-6 py-4 text-slate-500">Low (Noise interference)</td>
-                                                    <td className="px-6 py-4 text-emerald-400 font-bold">Very High</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                    <div className="mb-8">
+                                        <button onClick={() => setShowCode(!showCode)} className="w-full py-3 border border-slate-700 hover:border-slate-500 rounded text-slate-400 hover:text-white text-sm font-mono transition flex items-center justify-center gap-2">
+                                            <Icons.Code className="w-4 h-4" /> {showCode ? 'Hide Visualization' : 'Visualize: HTML vs AI View'}
+                                        </button>
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="h-40 flex items-center justify-center text-slate-600 text-sm font-mono bg-slate-950/30">
-                                    // WAITING_FOR_INPUT...
+
+                                    {showCode && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in zoom-in duration-300">
+                                            <div>
+                                                <div className="text-xs text-red-400 font-mono mb-2 uppercase">What Standard Bots See (Raw HTML)</div>
+                                                <pre className="bg-red-950/20 border border-red-900/30 p-4 rounded text-[10px] text-red-200/50 font-mono h-64 overflow-hidden whitespace-pre-wrap break-all select-none pointer-events-none">
+                                                    {result.before.snippet}
+                                                </pre>
+                                            </div>
+                                            <div>
+                                                <div className="text-xs text-emerald-400 font-mono mb-2 uppercase">What Spring AI Bots See (Clean)</div>
+                                                <pre className="bg-emerald-950/20 border border-emerald-900/30 p-4 rounded text-xs text-emerald-200 font-mono h-64 overflow-auto whitespace-pre-wrap">
+                                                    {result.after.snippet}
+                                                </pre>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
